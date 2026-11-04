@@ -3,7 +3,7 @@ import { Poppins, Roboto } from "next/font/google";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import { services, site } from "@/lib/site";
+import { asset, services, site } from "@/lib/site";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -38,9 +38,9 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Haaps",
     locale: "en_IN",
-    images: [{ url: "/logo.png", width: 1064, height: 710, alt: "Haaps" }],
+    images: [{ url: `${site.url}/logo.png`, width: 1064, height: 710, alt: "Haaps" }],
   },
-  icons: { icon: "/logo.png" },
+  icons: { icon: asset("/logo.png") },
 };
 
 const jsonLd = {

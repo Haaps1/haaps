@@ -4,12 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { navLinks } from "@/lib/site";
+import { asset, navLinks } from "@/lib/site";
 import Icon from "./Icon";
 
 // Floating, see-through rounded menu. Dark glass over the purple hero, light glass once scrolled.
 export default function Navbar() {
-  const pathname = usePathname();
+  // Strip the trailing slash added by `trailingSlash: true` so "/services/" matches "/services".
+  const pathname = usePathname().replace(/(.)\/$/, "$1");
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -33,7 +34,7 @@ export default function Navbar() {
         }`}
       >
         <Link href="/" aria-label="Haaps home" className="flex rounded-[14px] bg-white px-2.5 py-1">
-          <Image src="/logo.png" alt="Haaps" width={54} height={36} priority className="h-9 w-auto" />
+          <Image src={asset("/logo.png")} alt="Haaps" width={54} height={36} priority className="h-9 w-auto" />
         </Link>
 
         <div className="hidden items-center gap-1 text-[15px] md:flex">

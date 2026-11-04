@@ -1,8 +1,14 @@
+// Sub-folder the site is served from ("" on a root domain, "/haaps" on GitHub Pages).
+export const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
+// Prefix a file from /public with the base path (next/image does not do this itself).
+export const asset = (path: string) => `${basePath}${path}`;
+
 // Business details. Replace the placeholder values before going live.
 export const site = {
   name: "Haaps",
   tagline: "Digital Marketing Agency in Bangalore",
-  url: "https://www.haaps.in", // TODO: real domain
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.haaps.in", // TODO: real domain
   phoneDisplay: "+91 XXXXX XXXXX", // TODO
   phoneHref: "tel:+910000000000", // TODO
   whatsappNumber: "910000000000", // TODO: country code + number, digits only
@@ -141,7 +147,7 @@ export const stats = [
   { value: 4.5, suffix: "x", label: "Average ROAS", decimals: 1 },
 ];
 
-export const process = [
+export const workProcess = [
   { title: "Free audit", text: "We review your socials, ads, website and competitors — and find where leads are leaking." },
   { title: "Strategy", text: "A clear plan: channels, content, budget and the numbers we'll be judged on." },
   { title: "Create & launch", text: "Reels, ads, website and automations go live — fast." },

@@ -1,0 +1,3 @@
+# Used on Apache hosts such as Hostinger (ignored by GitHub Pages).
+ErrorDocument 404 /404.html
+Options -Indexes

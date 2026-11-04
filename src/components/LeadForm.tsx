@@ -9,6 +9,9 @@ type Status = "idle" | "sending" | "sent" | "error";
 
 const budgets = ["Under ₹25,000 / month", "₹25,000 – ₹50,000 / month", "₹50,000 – ₹1,00,000 / month", "Above ₹1,00,000 / month", "Not sure yet"];
 
+const formEndpoint = process.env.NEXT_PUBLIC_FORM_ENDPOINT || "";
+const formAccessKey = process.env.NEXT_PUBLIC_FORM_ACCESS_KEY || "";
+
 const field =
   "w-full rounded-xl border border-[#EBD3E4] bg-[#FBF5F9] px-3.5 py-3.5 text-[15px] text-ink outline-none transition focus:border-pink focus:ring-2 focus:ring-pink/20";
 
@@ -17,6 +20,7 @@ export default function LeadForm({ variant = "compact" }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const serviceRef = useRef<HTMLSelectElement>(null);
   const [error, setError] = useState("");
+  const [via, setVia] = useState<"form" | "whatsapp">("form");
 
   // Pre-select a service when arriving from "Get a quote for X" (/contact?service=slug).
   useEffect(() => {
@@ -24,20 +28,51 @@ export default function LeadForm({ variant = "compact" }: Props) {
     if (s && serviceRef.current && services.some((x) => x.slug === s)) serviceRef.current.value = s;
   }, []);
 
+  // The site is static (no server), so a lead goes to a form service when one is
+  // configured (NEXT_PUBLIC_FORM_ENDPOINT, e.g. Formspree or Web3Forms), and
+  // otherwise opens WhatsApp with the details filled in.
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form));
-    setStatus("sending");
+    const { company, ...fields } = Object.fromEntries(new FormData(form)) as Record<string, string>;
+    if (company) {
+      setStatus("sent"); // honeypot filled: a bot, drop it quietly
+      return;
+    }
+    const serviceName = services.find((s) => s.slug === fields.service)?.name ?? "Not sure — advise me";
+    const lead: Record<string, string> = { ...fields, service: serviceName, page: window.location.pathname };
     setError("");
+
+    if (!formEndpoint) {
+      const lines = [
+        "Hi Haaps, I'd like a free growth audit.",
+        `Name: ${lead.name}`,
+        `Phone: ${lead.phone}`,
+        lead.email && `Email: ${lead.email}`,
+        `Service: ${lead.service}`,
+        lead.budget && `Budget: ${lead.budget}`,
+        lead.message && `About my business: ${lead.message}`,
+      ].filter(Boolean);
+      window.open(whatsappLink(lines.join("\n")), "_blank", "noopener,noreferrer");
+      setVia("whatsapp");
+      setStatus("sent");
+      form.reset();
+      return;
+    }
+
+    setStatus("sending");
     try {
-      const res = await fetch("/api/lead", {
+      const res = await fetch(formEndpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, page: window.location.pathname }),
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          ...lead,
+          subject: `New website lead: ${lead.name} (${lead.service})`,
+          ...(formAccessKey ? { access_key: formAccessKey } : {}),
+        }),
       });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || "Something went wrong.");
+      if (!res.ok) throw new Error("We couldn't send your details right now.");
+      setVia("form");
       setStatus("sent");
       form.reset();
     } catch (err) {
@@ -50,8 +85,14 @@ export default function LeadForm({ variant = "compact" }: Props) {
     return (
       <div role="status" className="flex flex-col items-start gap-4 rounded-[28px] border border-line bg-white p-8 shadow-[0_40px_80px_-40px_rgba(147,7,155,0.45)]">
         <span className="grid h-12 w-12 place-items-center rounded-full bg-[#DCFCE7] text-2xl text-[#16A34A]">✓</span>
-        <h3 className="font-display text-2xl font-bold">Thanks — we&apos;ve got your details!</h3>
-        <p className="text-body">Our team will call or WhatsApp you within 1 working hour.</p>
+        <h3 className="font-display text-2xl font-bold">
+          {via === "whatsapp" ? "Almost done — press send on WhatsApp!" : "Thanks — we've got your details!"}
+        </h3>
+        <p className="text-body">
+          {via === "whatsapp"
+            ? "We've opened WhatsApp with your details filled in. Send the message and our team will reply within 1 working hour."
+            : "Our team will call or WhatsApp you within 1 working hour."}
+        </p>
         <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="font-display font-semibold text-plum underline underline-offset-4">
           Can&apos;t wait? Chat on WhatsApp now →
         </a>
