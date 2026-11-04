@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "src/app/globals.css"
+        ],
+        "createdAt": "2026-11-04T10:47:33.558Z",
+        "reason": "user confirmed: user picked Home 4 design (logo pink→purple gradient highlight on headline words) and asked to build the site from it"
+      }
+    ]
+  }
+}
